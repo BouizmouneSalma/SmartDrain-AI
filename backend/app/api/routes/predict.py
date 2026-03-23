@@ -7,7 +7,7 @@ from ultralytics import YOLO
 
 router = APIRouter(prefix="/predict", tags=["Predict"])
 
-model = YOLO("app/ml/best.pt")
+model = YOLO("C:\mes projets\Frouge\Frouge\ml\models\yolov8_cover-detector\weights\best.pt")
 
 @router.post("/image")
 async def predict_image(file: UploadFile = File(...)):

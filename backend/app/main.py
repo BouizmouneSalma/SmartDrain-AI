@@ -1,5 +1,5 @@
 ﻿from fastapi import FastAPI
-from app.api.routes import auth, predict, history
+from backend.app.api.routes import auth, predict, history
 
 app = FastAPI(title="Frouge API")
 
