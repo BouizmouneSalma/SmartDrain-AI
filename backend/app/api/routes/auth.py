@@ -6,6 +6,7 @@ router = APIRouter(prefix="/auth", tags=["Auth"])
 
 fake_users = {
     "demo@frouge.ai": "demo123",
+    "test@frouge.ai": "test123",
 }
 
 class User(BaseModel):
