@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # Frontend React
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: smartdrain_frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - smartdrain_network
+
+  # Backend FastAPI (à ajouter plus tard)
+  # backend:
+  #   build:
+  #     context: ./backend
+  #     dockerfile: Dockerfile
+  #   container_name: smartdrain_backend
+  #   ports:
+  #     - "8000:8000"
+  #   environment:
+  #     - DATABASE_URL=postgresql://user:password@postgres:5432/smartdrain
+  #   depends_on:
+  #     - postgres
+  #   restart: unless-stopped
+  #   networks:
+  #     - smartdrain_network
+
+  # PostgreSQL Database (à ajouter plus tard)
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: smartdrain_db
+  #   environment:
+  #     - POSTGRES_USER=user
+  #     - POSTGRES_PASSWORD=password
+  #     - POSTGRES_DB=smartdrain
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+  #   networks:
+  #     - smartdrain_network
+
+networks:
+  smartdrain_network:
+    driver: bridge
+
+# volumes:
+#   postgres_data:
