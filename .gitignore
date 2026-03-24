@@ -9,3 +9,5 @@ dataset/
 logs/
 results/
 ml/models/
+package-lock.json
+ml/notebooks/yolov8s.pt
