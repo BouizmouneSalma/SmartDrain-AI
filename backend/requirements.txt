@@ -20,3 +20,5 @@ ultralytics
 scikit-image
 filterpy
 python-multipart
+prometheus-client
+prometheus-fastapi-instrumentator
