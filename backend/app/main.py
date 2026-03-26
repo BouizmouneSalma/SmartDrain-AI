@@ -2,8 +2,12 @@
 from fastapi.middleware.cors import CORSMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 from app.api.routes import auth, predict, history
+from app.core.database import Base, engine
+from app.models import HistoryEntry, User
 
 app = FastAPI(title="Frouge API")
+
+Base.metadata.create_all(bind=engine)
 
 app.add_middleware(
     CORSMiddleware,
@@ -25,6 +29,8 @@ app.add_middleware(
 app.include_router(auth.router)
 app.include_router(predict.router)
 app.include_router(history.router)
+
+Instrumentator().instrument(app).expose(app)
 
 @app.get("/")
 def root():

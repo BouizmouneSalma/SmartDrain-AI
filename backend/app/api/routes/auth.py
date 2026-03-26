@@ -1,27 +1,16 @@
-#route history
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
+
+from app.core.database import get_db
+from app.schemas.user import UserCreate, UserLogin
+from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/auth", tags=["Auth"])
 
-fake_users = {
-    "demo@frouge.ai": "demo123",
-    "test@frouge.ai": "test123",
-}
-
-class User(BaseModel):
-    email: str
-    password: str
 @router.post("/register")
-def register(user: User):
-    if user.email in fake_users:
-        raise HTTPException(status_code=400, detail="User already exists")
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    return AuthService.register(db=db, email=user.email, password=user.password)
 
-    fake_users[user.email] = user.password
-    return {"message": "User created"}
 @router.post("/login")
-def login(user: User):
-    if user.email not in fake_users or fake_users[user.email] != user.password:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-
-    return {"message": "Login successful", "token": "fake-jwt-token"}
+def login(user: UserLogin, db: Session = Depends(get_db)):
+    return AuthService.login(db=db, email=user.email, password=user.password)

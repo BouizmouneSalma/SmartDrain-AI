@@ -24,7 +24,6 @@ services:
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql://smartdrain_user:smartdrain_pass@postgres:5432/smartdrain
       - LOG_LEVEL=info
     depends_on:
       - postgres
