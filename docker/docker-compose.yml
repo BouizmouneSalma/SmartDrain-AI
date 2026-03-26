@@ -4,7 +4,7 @@ services:
   # Frontend React
   frontend:
     build:
-      context: ./frontend
+      context: ../frontend
       dockerfile: Dockerfile
     container_name: smartdrain_frontend
     ports:
@@ -18,7 +18,7 @@ services:
   # Backend FastAPI
   backend:
     build:
-      context: ./backend
+      context: ../backend
       dockerfile: Dockerfile
     container_name: smartdrain_backend
     ports:
@@ -32,7 +32,7 @@ services:
     networks:
       - smartdrain_network
     volumes:
-      - ./ml:/app/ml:ro  # Montage du dossier ml (lecture seule)
+      - ../ml:/app/ml:ro  # Montage du dossier ml (lecture seule)
 
   # PostgreSQL Database
   postgres:
@@ -62,7 +62,7 @@ services:
     ports:
       - "9090:9090"
     volumes:
-      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     command:
       - '--config.file=/etc/prometheus/prometheus.yml'
@@ -87,9 +87,9 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel
     volumes:
       - grafana_data:/var/lib/grafana
-      - ./monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
-      - ./monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
+      - ../monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ../monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ../monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
     restart: unless-stopped
     networks:
       - smartdrain_network
