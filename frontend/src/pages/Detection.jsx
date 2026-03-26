@@ -96,7 +96,7 @@ const Detection = () => {
 
       // Format detections
       const formattedDetections = detectionData.map((det) => ({
-        class: CLASSES[det.class] || 'Unknown',
+        class: det.class_name || CLASSES[det.class] || 'Unknown',
         confidence: (det.confidence * 100).toFixed(2),
         bbox: det.bbox,
       }));
