@@ -1,5 +1,6 @@
 ﻿from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from prometheus_fastapi_instrumentator import Instrumentator
 from backend.app.api.routes import auth, predict, history
 
 app = FastAPI(title="Frouge API")
@@ -21,10 +22,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(auth.router)
 app.include_router(predict.router)
 app.include_router(history.router)
 
 @app.get("/")
 def root():
     return {"message": "API running"}
+
+@app.get("/health")
+def health():
+    """Health check endpoint pour monitoring."""
+    return {
+        "status": "healthy",
+        "service": "smartdrain-backend",
+        "version": "1.0.0"
+    }
