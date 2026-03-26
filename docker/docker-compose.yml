@@ -8,7 +8,7 @@ services:
       dockerfile: Dockerfile
     container_name: smartdrain_frontend
     ports:
-      - "3000:80"
+      - "3002:80"
     restart: unless-stopped
     networks:
       - smartdrain_network
@@ -60,7 +60,7 @@ services:
     image: prom/prometheus:latest
     container_name: smartdrain_prometheus
     ports:
-      - "9090:9090"
+      - "9091:9090"
     volumes:
       - ../monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -87,8 +87,8 @@ services:
       - GF_INSTALL_PLUGINS=grafana-clock-panel
     volumes:
       - grafana_data:/var/lib/grafana
-      - ../monitoring/grafana-dashboards:/etc/grafana/provisioning/dashboards:ro
       - ../monitoring/grafana-dashboards.yml:/etc/grafana/provisioning/dashboards/dashboards.yml:ro
+      - ../monitoring/grafana-dashboards:/var/lib/grafana/dashboards:ro
       - ../monitoring/grafana-datasources.yml:/etc/grafana/provisioning/datasources/datasources.yml:ro
     restart: unless-stopped
     networks:
