@@ -3,11 +3,13 @@
 from fastapi import APIRouter, UploadFile, File
 import cv2
 import numpy as np
+import os
 from ultralytics import YOLO
 
 router = APIRouter(prefix="/predict", tags=["Predict"])
 
-model = YOLO(r"C:\mes projets\Frouge\Frouge\ml\models\yolov8_cover-detector\weights\best.pt")
+DEFAULT_MODEL_PATH = "/app/ml/models/yolov8_cover-detector/weights/best.pt"
+model = YOLO(os.getenv("MODEL_PATH", DEFAULT_MODEL_PATH))
 
 @router.post("/image")
 async def predict_image(file: UploadFile = File(...)):
