@@ -1,0 +1,15 @@
+# Grafana Dashboards Provisioning
+# Configure les dashboards à charger automatiquement
+
+apiVersion: 1
+
+providers:
+  - name: 'SmartDrain Dashboards'
+    orgId: 1
+    folder: ''
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 10
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards
