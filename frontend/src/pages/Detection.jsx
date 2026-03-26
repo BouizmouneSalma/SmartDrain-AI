@@ -32,6 +32,23 @@ const CLASS_COLORS = {
   'Uncovered': '#1890ff',
 };
 
+const getErrorMessage = (err) => {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === 'string') {
+    return detail;
+  }
+  if (Array.isArray(detail)) {
+    return detail
+      .map((item) => {
+        if (typeof item === 'string') return item;
+        if (item?.msg) return item.msg;
+        return 'Validation error';
+      })
+      .join(', ');
+  }
+  return 'Detection failed. Please try again.';
+};
+
 const Detection = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [preview, setPreview] = useState(null);
@@ -87,16 +104,17 @@ const Detection = () => {
       setDetections(formattedDetections);
 
       // Save to history
+      const topType = formattedDetections[0]?.class || 'Uncovered';
       await historyAPI.addHistory({
         filename: selectedFile.name,
-        timestamp: new Date().toISOString(),
         status: 'Completed',
         detectionCount: detectionData.length,
+        type: topType,
       });
 
       setSuccess(`Detection complete! Found ${detectionData.length} object(s)`);
     } catch (err) {
-      setError(err.response?.data?.detail || 'Detection failed. Please try again.');
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
