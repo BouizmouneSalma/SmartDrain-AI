@@ -2,8 +2,13 @@ import os
 
 import cv2
 import numpy as np
-from fastapi import APIRouter, File, Query, UploadFile
+from fastapi import APIRouter, Depends, File, Query, UploadFile
+from sqlalchemy.orm import Session
 from ultralytics import YOLO
+
+from app.core.database import get_db
+from app.schemas.history import HistoryCreate
+from app.services.history_service import HistoryService
 
 router = APIRouter(prefix="/predict", tags=["Predict"])
 
@@ -120,6 +125,7 @@ async def predict_image(
     augment: bool = Query(default=True),
     enhance: bool = Query(default=True),
     max_det: int = Query(default=20, ge=1, le=300),
+    db: Session = Depends(get_db),
 ):
     contents = await file.read()
 
@@ -143,6 +149,7 @@ async def predict_image(
     )
 
     detections = []
+    names = model.names
 
     for r in results:
         names = getattr(r, "names", model.names)
@@ -168,6 +175,16 @@ async def predict_image(
         primary_detection = sorted(detections, key=rank_detection, reverse=True)[0]
 
     final_decision = resolve_final_decision(detections)
+
+    HistoryService.add_history(
+        db,
+        HistoryCreate(
+            filename=file.filename or "uploaded_image",
+            status=final_decision["label"] if final_decision else "NoDetection",
+            detectionCount=len(detections),
+            type="image",
+        ),
+    )
 
     return {
         "detections": detections,
