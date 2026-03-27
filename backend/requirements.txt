@@ -22,3 +22,4 @@ filterpy
 python-multipart
 prometheus-client
 prometheus-fastapi-instrumentator
+pytest
