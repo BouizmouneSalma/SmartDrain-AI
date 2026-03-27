@@ -4,6 +4,7 @@ import os
 
 from fastapi import HTTPException
 from sqlalchemy.orm import Session
+from sqlalchemy import func
 
 from app.models.user import User
 
@@ -12,17 +13,22 @@ _HASH_SALT = os.getenv("AUTH_SALT", "smartdrain-dev-salt")
 
 class AuthService:
 	@staticmethod
+	def _normalize_email(email: str) -> str:
+		return email.strip().lower()
+
+	@staticmethod
 	def _hash_password(password: str) -> str:
 		payload = f"{_HASH_SALT}:{password}".encode("utf-8")
 		return hashlib.sha256(payload).hexdigest()
 
 	@classmethod
 	def register(cls, db: Session, email: str, password: str) -> dict:
-		existing = db.query(User).filter(User.email == email).first()
+		normalized_email = cls._normalize_email(email)
+		existing = db.query(User).filter(func.lower(User.email) == normalized_email).first()
 		if existing:
 			raise HTTPException(status_code=400, detail="User already exists")
 
-		user = User(email=email, password_hash=cls._hash_password(password))
+		user = User(email=normalized_email, password_hash=cls._hash_password(password))
 		db.add(user)
 		db.commit()
 		db.refresh(user)
@@ -30,7 +36,8 @@ class AuthService:
 
 	@classmethod
 	def login(cls, db: Session, email: str, password: str) -> dict:
-		user = db.query(User).filter(User.email == email).first()
+		normalized_email = cls._normalize_email(email)
+		user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
 		if not user:
 			raise HTTPException(status_code=401, detail="Invalid credentials")
 

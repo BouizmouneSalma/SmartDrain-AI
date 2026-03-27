@@ -28,9 +28,10 @@ const Login = () => {
     setLoading(true);
 
     try {
-      const response = await authAPI.login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      const response = await authAPI.login(normalizedEmail, password);
       const { token } = response.data;
-      login({ email }, token);
+      login({ email: normalizedEmail }, token);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.detail || 'Login failed. Please check your credentials.');
@@ -89,8 +90,8 @@ const Login = () => {
                 fullWidth
                 variant="contained"
                 size="large"
+                type="submit"
                 disabled={loading}
-                onClick={handleSubmit}
                 sx={{ mt: 2 }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Login'}

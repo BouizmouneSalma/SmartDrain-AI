@@ -27,10 +27,11 @@ api.interceptors.response.use(
 );
 
 export const authAPI = {
+  normalizeEmail: (email) => email.trim().toLowerCase(),
   register: (email, password) =>
-    api.post('/auth/register', { email, password }),
+    api.post('/auth/register', { email: authAPI.normalizeEmail(email), password }),
   login: (email, password) =>
-    api.post('/auth/login', { email, password }),
+    api.post('/auth/login', { email: authAPI.normalizeEmail(email), password }),
 };
 
 export const predictAPI = {

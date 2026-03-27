@@ -40,10 +40,11 @@ const Register = () => {
     setLoading(true);
 
     try {
-      await authAPI.register(email, password);
-      const loginResponse = await authAPI.login(email, password);
+      const normalizedEmail = email.trim().toLowerCase();
+      await authAPI.register(normalizedEmail, password);
+      const loginResponse = await authAPI.login(normalizedEmail, password);
       const { token } = loginResponse.data;
-      login({ email }, token);
+      login({ email: normalizedEmail }, token);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.detail || 'Registration failed. Please try again.');
@@ -111,8 +112,8 @@ const Register = () => {
                 fullWidth
                 variant="contained"
                 size="large"
+                type="submit"
                 disabled={loading}
-                onClick={handleSubmit}
                 sx={{ mt: 2 }}
               >
                 {loading ? <CircularProgress size={24} /> : 'Sign Up'}

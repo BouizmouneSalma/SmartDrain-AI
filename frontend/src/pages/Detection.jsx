@@ -56,6 +56,15 @@ const Detection = () => {
   const [detections, setDetections] = useState([]);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [finalDecision, setFinalDecision] = useState(null);
+
+  const finalDisplayRows = finalDecision
+    ? [{
+        class: finalDecision.label,
+        confidence: ((finalDecision.confidence || 0) * 100).toFixed(2),
+        bbox: null,
+      }]
+    : detections;
 
   const onDrop = useCallback((acceptedFiles) => {
     if (acceptedFiles.length > 0) {
@@ -93,6 +102,7 @@ const Detection = () => {
     try {
       const response = await predictAPI.predictImage(selectedFile);
       const detectionData = response.data.detections || [];
+      const decision = response.data.final_decision || null;
 
       // Format detections
       const formattedDetections = detectionData.map((det) => ({
@@ -102,9 +112,10 @@ const Detection = () => {
       }));
 
       setDetections(formattedDetections);
+      setFinalDecision(decision);
 
       // Save to history
-      const topType = formattedDetections[0]?.class || 'Uncovered';
+      const topType = decision?.label || formattedDetections[0]?.class || 'Uncovered';
       await historyAPI.addHistory({
         filename: selectedFile.name,
         status: 'Completed',
@@ -112,7 +123,7 @@ const Detection = () => {
         type: topType,
       });
 
-      setSuccess(`Detection complete! Found ${detectionData.length} object(s)`);
+      setSuccess(`Detection complete! Final class: ${topType}`);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -124,12 +135,20 @@ const Detection = () => {
     setSelectedFile(null);
     setPreview(null);
     setDetections([]);
+    setFinalDecision(null);
     setError('');
     setSuccess('');
   };
 
   const handleDownloadResults = () => {
-    const dataStr = JSON.stringify(detections, null, 2);
+    const dataStr = JSON.stringify(
+      {
+        finalDecision,
+        rawDetections: detections,
+      },
+      null,
+      2
+    );
     const dataBlob = new Blob([dataStr], { type: 'application/json' });
     const url = URL.createObjectURL(dataBlob);
     const link = document.createElement('a');
@@ -267,9 +286,17 @@ const Detection = () => {
           {/* Detections Results */}
           {detections.length > 0 && (
             <Paper sx={{ mt: 4, p: 3 }}>
+              {finalDecision && (
+                <Alert severity="info" sx={{ mb: 2 }}>
+                  Final Decision: <strong>{finalDecision.label}</strong>
+                  {typeof finalDecision.confidence === 'number' && (
+                    <> ({(finalDecision.confidence * 100).toFixed(2)}%)</>
+                  )}
+                </Alert>
+              )}
               <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                  Detection Results
+                  Final Classification
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1 }}>
                   <Button
@@ -293,7 +320,7 @@ const Detection = () => {
                     </TableRow>
                   </TableHead>
                   <TableBody>
-                    {detections.map((detection, index) => (
+                    {finalDisplayRows.map((detection, index) => (
                       <TableRow key={index}>
                         <TableCell>
                           <Chip
@@ -317,9 +344,13 @@ const Detection = () => {
                           </Box>
                         </TableCell>
                         <TableCell align="right">
-                          <Typography variant="caption">
-                            [{detection.bbox.map((v) => v.toFixed(1)).join(', ')}]
-                          </Typography>
+                          {Array.isArray(detection.bbox) ? (
+                            <Typography variant="caption">
+                              [{detection.bbox.map((v) => v.toFixed(1)).join(', ')}]
+                            </Typography>
+                          ) : (
+                            <Typography variant="caption">-</Typography>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -333,7 +364,7 @@ const Detection = () => {
                 </Typography>
                 <Grid container spacing={2}>
                   {Object.entries(
-                    detections.reduce((acc, det) => {
+                    finalDisplayRows.reduce((acc, det) => {
                       acc[det.class] = (acc[det.class] || 0) + 1;
                       return acc;
                     }, {})
