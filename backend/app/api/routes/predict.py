@@ -6,7 +6,9 @@ from fastapi import APIRouter, Depends, File, Query, UploadFile
 from sqlalchemy.orm import Session
 from ultralytics import YOLO
 
+from app.core.auth import get_current_user
 from app.core.database import get_db
+from app.models.user import User
 from app.schemas.history import HistoryCreate
 from app.services.history_service import HistoryService
 
@@ -126,6 +128,7 @@ async def predict_image(
     enhance: bool = Query(default=True),
     max_det: int = Query(default=20, ge=1, le=300),
     db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     contents = await file.read()
 
@@ -184,6 +187,7 @@ async def predict_image(
             detectionCount=len(detections),
             type="image",
         ),
+        user_id=current_user.id,
     )
 
     return {

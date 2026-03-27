@@ -28,7 +28,7 @@ def test_login_success(client):
     assert response.status_code == 200
     data = response.json()
     assert data["message"] == "Login successful"
-    assert data["token"] == "fake-jwt-token"
+    assert data["token"].startswith("u.")
 
 
 def test_login_invalid_credentials_returns_401(client):
@@ -38,3 +38,15 @@ def test_login_invalid_credentials_returns_401(client):
 
     assert response.status_code == 401
     assert response.json()["detail"] == "Invalid credentials"
+
+
+def test_login_tokens_are_user_specific(client):
+    client.post("/auth/register", json={"email": "user1@test.com", "password": "secret123"})
+    client.post("/auth/register", json={"email": "user2@test.com", "password": "secret123"})
+
+    login_1 = client.post("/auth/login", json={"email": "user1@test.com", "password": "secret123"})
+    login_2 = client.post("/auth/login", json={"email": "user2@test.com", "password": "secret123"})
+
+    assert login_1.status_code == 200
+    assert login_2.status_code == 200
+    assert login_1.json()["token"] != login_2.json()["token"]

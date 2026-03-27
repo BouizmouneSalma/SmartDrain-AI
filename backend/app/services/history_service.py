@@ -6,8 +6,13 @@ from app.schemas.history import HistoryCreate
 
 class HistoryService:
 	@staticmethod
-	def list_history(db: Session) -> list[dict]:
-		rows = db.query(HistoryEntry).order_by(HistoryEntry.created_at.desc()).all()
+	def list_history(db: Session, user_id: int) -> list[dict]:
+		rows = (
+			db.query(HistoryEntry)
+			.filter(HistoryEntry.user_id == user_id)
+			.order_by(HistoryEntry.created_at.desc())
+			.all()
+		)
 		return [
 			{
 				"id": row.id,
@@ -21,8 +26,9 @@ class HistoryService:
 		]
 
 	@staticmethod
-	def add_history(db: Session, item: HistoryCreate) -> dict:
+	def add_history(db: Session, item: HistoryCreate, user_id: int) -> dict:
 		row = HistoryEntry(
+			user_id=user_id,
 			filename=item.filename,
 			status=item.status,
 			detection_count=item.detectionCount,
