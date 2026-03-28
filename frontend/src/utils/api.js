@@ -40,6 +40,7 @@ export const predictAPI = {
     formData.append('file', file);
     return api.post('/predict/image', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 30000,
     });
   },
   predictVideo: (file) => {
@@ -47,6 +48,7 @@ export const predictAPI = {
     formData.append('file', file);
     return api.post('/predict/video', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 300000, // 5 minutes for video processing
     });
   },
 };

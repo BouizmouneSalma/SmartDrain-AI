@@ -11,6 +11,7 @@ from app.core.database import get_db
 from app.models.user import User
 from app.schemas.history import HistoryCreate
 from app.services.history_service import HistoryService
+from app.services.video_service import VideoService
 
 router = APIRouter(prefix="/predict", tags=["Predict"])
 
@@ -207,5 +208,81 @@ async def predict_image(
 
 
 @router.post("/video")
-async def predict_video(file: UploadFile = File(...)):
-    return {"message": "Video prediction coming soon 🚧"}
+async def predict_video(
+    file: UploadFile = File(...),
+    conf: float = Query(default=0.25, ge=0.01, le=1.0),
+    iou: float = Query(default=0.45, ge=0.1, le=0.95),
+    imgsz: int = Query(default=1024, ge=320, le=1920),
+    augment: bool = Query(default=True),
+    enhance: bool = Query(default=True),
+    max_det: int = Query(default=20, ge=1, le=300),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """
+    Process video file for cover detection.
+    Returns annotated video + JSON results with per-frame detections.
+    """
+    contents = await file.read()
+
+    # Process video
+    video_service = VideoService(model)
+    result = video_service.process_video(
+        video_content=contents,
+        filename=file.filename or "uploaded_video.mp4",
+        conf=conf,
+        iou=iou,
+        imgsz=imgsz,
+        augment=augment,
+        enhance=enhance,
+        max_det=max_det,
+    )
+
+    if result["status"] != "success":
+        return result
+
+    # Determine final status from all frames
+    all_decisions = [f["final_decision"] for f in result["frame_results"] if f["final_decision"]]
+    
+    if all_decisions:
+        # Use the most confident decision
+        final_decision = max(all_decisions, key=lambda d: d.get("confidence", 0))
+        final_status = final_decision.get("label", "Unknown")
+    else:
+        final_status = "NoDetection"
+
+    # Save to history
+    HistoryService.add_history(
+        db,
+        HistoryCreate(
+            filename=file.filename or "uploaded_video.mp4",
+            status=final_status,
+            detectionCount=result["total_detections"],
+            type="video",
+        ),
+        user_id=current_user.id,
+    )
+
+    return {
+        "status": "success",
+        "output_video": result["output_video"],
+        "output_json": result["output_json"],
+        "total_frames": result["total_frames"],
+        "fps": result["fps"],
+        "resolution": result["resolution"],
+        "total_detections": result["total_detections"],
+        "avg_detections_per_frame": result["avg_detections_per_frame"],
+        "unique_classes_detected": result["unique_classes_detected"],
+        "final_analysis": {
+            "status": final_status,
+            "total_frames_with_detections": len(all_decisions),
+        },
+        "inference": {
+            "conf": conf,
+            "iou": iou,
+            "imgsz": imgsz,
+            "augment": augment,
+            "enhance": enhance,
+            "max_det": max_det,
+        },
+    }
